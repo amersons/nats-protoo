@@ -1,4 +1,4 @@
-module github.com/cloudwebrtc/nats-protoo
+module github.com/amersons/nats-protoo
 
 go 1.12
 
