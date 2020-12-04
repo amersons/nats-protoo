@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 
-	nprotoo "github.com/cloudwebrtc/nats-protoo"
-	"github.com/cloudwebrtc/nats-protoo/logger"
+	nprotoo "github.com/amersons/nats-protoo"
+	"github.com/amersons/nats-protoo/logger"
 )
 
 func JsonEncode(str string) map[string]interface{} {
