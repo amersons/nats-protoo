@@ -47,7 +47,11 @@ func newRequestor(channel string, np *NatsProtoo, nc *nats.Conn) *Requestor {
 	// Sub reply inbox.
 	random, _ := GenerateRandomString(12)
 	req.reply = "requestor-id-" + random
-	req.nc.QueueSubscribe(req.reply, _EMPTY_, req.onReply)
+	if np.queue != "" {
+		req.nc.QueueSubscribe(req.reply, np.queue, req.onReply)
+	} else {
+		req.nc.Subscribe(req.reply, req.onReply)
+	}
 	req.nc.Flush()
 	req.transcations = make(map[int]*Transcation)
 	return &req

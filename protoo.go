@@ -25,6 +25,7 @@ type NatsProtoo struct {
 	emission.Emitter
 	nc                 *nats.Conn
 	mutex              *sync.Mutex
+	queue              string
 	subj               string
 	closed             bool
 	requestListener    map[string]RequestFunc
@@ -33,6 +34,11 @@ type NatsProtoo struct {
 
 // NewNatsProtoo .
 func NewNatsProtoo(server string) *NatsProtoo {
+	return NewNatsQueueProtoo(server, _EMPTY_)
+}
+
+// NewNatsProtoo .
+func NewNatsQueueProtoo(server, queue string) *NatsProtoo {
 	var np NatsProtoo
 	np.closed = false
 	// Connect Options.
@@ -49,11 +55,12 @@ func NewNatsProtoo(server string) *NatsProtoo {
 		np.Emit("close", 0, nc.LastError().Error)
 		np.closed = true
 	})
+	np.queue = queue
 	np.Emitter = *emission.NewEmitter()
 	np.mutex = new(sync.Mutex)
 	np.requestListener = make(map[string]RequestFunc)
 	np.broadcastListeners = make(map[string][]BroadCastFunc)
-	logger.Infof("New Nats Protoo: nats => %s", server)
+	logger.Infof("New Nats Protoo: nats => %s queue=>%s", server, queue)
 	return &np
 }
 
@@ -65,7 +72,11 @@ func (np *NatsProtoo) OnRequest(channel string, listener RequestFunc) {
 	np.mutex.Lock()
 	defer np.mutex.Unlock()
 	if _, found := np.requestListener[channel]; !found {
-		np.nc.QueueSubscribe(channel, _EMPTY_, np.onRequest)
+		if np.queue != "" {
+			np.nc.QueueSubscribe(channel, np.queue, np.onRequest)
+		} else {
+			np.nc.Subscribe(channel, np.onRequest)
+		}
 		np.nc.Flush()
 	}
 	np.requestListener[channel] = listener
@@ -80,7 +91,11 @@ func (np *NatsProtoo) OnBroadcast(channel string, listener BroadCastFunc) {
 	defer np.mutex.Unlock()
 
 	if _, found := np.broadcastListeners[channel]; !found {
-		np.nc.QueueSubscribe(channel, _EMPTY_, np.onRequest)
+		if np.queue != "" {
+			np.nc.QueueSubscribe(channel, np.queue, np.onRequest)
+		} else {
+			np.nc.Subscribe(channel, np.onRequest)
+		}
 		np.nc.Flush()
 		np.broadcastListeners[channel] = make([]BroadCastFunc, 0)
 	}
@@ -172,7 +187,7 @@ func (np *NatsProtoo) Close() {
 
 // Send .
 func (np *NatsProtoo) Send(message []byte, subj string, reply string) error {
-	logger.Debugf("Send: %s", string(message))
+	logger.Debugf("Send: %s reply %s", string(message), reply)
 	np.mutex.Lock()
 	defer np.mutex.Unlock()
 	if np.closed {

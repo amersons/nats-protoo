@@ -52,6 +52,10 @@ func (bc *Broadcaster) Say(method string, data interface{}) {
 		logger.Errorf("Marshal %v", err)
 		return
 	}
-	logger.Debugf("Send notification [%s]", method)
+	logger.Debugf("Send notification [%s] queue[%s]", method, bc.np.queue)
+	if bc.np.queue != "" {
+		bc.np.Send(str, bc.subj, bc.np.queue)
+		return
+	}
 	bc.np.Send(str, bc.subj, _EMPTY_)
 }

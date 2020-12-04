@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-
 	nprotoo "github.com/cloudwebrtc/nats-protoo"
 	"github.com/cloudwebrtc/nats-protoo/logger"
 )
@@ -17,9 +16,9 @@ func JsonEncode(str string) map[string]interface{} {
 
 func main() {
 	logger.Init("debug")
-	npc := nprotoo.NewNatsProtoo(nprotoo.DefaultNatsURL)
+	npc := nprotoo.NewNatsQueueProtoo(nprotoo.DefaultNatsURL, "debug2")
+	//npc := nprotoo.NewNatsProtoo(/*nprotoo.DefaultNatsURL*/nats)
 	req := npc.NewRequestor("channel1")
-
 	req.AsyncRequest("offer", JsonEncode(`{ "sdp": "dummy-sdp1"}`)).Then(
 		func(result nprotoo.RawMessage) {
 			logger.Infof("AsyncRequest.Then: offer success: =>  %s", result)
