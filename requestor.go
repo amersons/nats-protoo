@@ -13,7 +13,7 @@ import (
 
 const (
 	// DefaultRequestTimeout .
-	DefaultRequestTimeout = 15 * time.Second
+	DefaultRequestTimeout = 30 * time.Second
 )
 
 // Requestor .
