@@ -58,10 +58,11 @@ func newRequestor(channel string, np *NatsProtoo, nc *nats.Conn) *Requestor {
 }
 
 // SetRequestTimeout .
-func (req *Requestor) SetRequestTimeout(d time.Duration) {
+func (req *Requestor) SetRequestTimeout(d time.Duration) *Requestor {
 	req.mutex.Lock()
 	defer req.mutex.Unlock()
 	req.timeout = d
+	return req
 }
 
 // Request .

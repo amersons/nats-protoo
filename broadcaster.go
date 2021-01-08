@@ -59,3 +59,27 @@ func (bc *Broadcaster) Say(method string, data interface{}) {
 	}
 	bc.np.Send(str, bc.subj, _EMPTY_)
 }
+
+// Say .[]byte
+func (bc *Broadcaster) SayRawMessage(method string, data []byte) {
+	notification := &Notification{
+		NotificationData: NotificationData{
+			Notification: true,
+		},
+		CommonData: CommonData{
+			Method: method,
+			Data:   data,
+		},
+	}
+	str, err := json.Marshal(notification)
+	if err != nil {
+		logger.Errorf("Marshal %v", err)
+		return
+	}
+	logger.Debugf("Send notification [%s] queue[%s]", method, bc.np.queue)
+	if bc.np.queue != "" {
+		bc.np.Send(str, bc.subj, bc.np.queue)
+		return
+	}
+	bc.np.Send(str, bc.subj, _EMPTY_)
+}
