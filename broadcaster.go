@@ -3,9 +3,9 @@ package nprotoo
 import (
 	"encoding/json"
 
+	"github.com/amersons/emission"
 	"github.com/amersons/nats-protoo/logger"
-	"github.com/chuckpreslar/emission"
-	nats "github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go"
 )
 
 // Broadcaster .

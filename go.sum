@@ -1,3 +1,5 @@
+github.com/amersons/emission v0.0.0-20210109083015-174e03727dcb h1:ZhCsspctwAF4vKn37i0q5bY/fBf3kk/FtEwc2/pLQsk=
+github.com/amersons/emission v0.0.0-20210109083015-174e03727dcb/go.mod h1:uvBsFy4ToUg+CzoG+V5eemtJ35/6N+23SlVfiev6WtU=
 github.com/chuckpreslar/emission v0.0.0-20170206194824-a7ddd980baf9 h1:xz6Nv3zcwO2Lila35hcb0QloCQsc38Al13RNEzWRpX4=
 github.com/chuckpreslar/emission v0.0.0-20170206194824-a7ddd980baf9/go.mod h1:2wSM9zJkl1UQEFZgSd68NfCgRz1VL1jzy/RjCg+ULrs=
 github.com/coreos/go-systemd v0.0.0-20190321100706-95778dfbb74e/go.mod h1:F5haX7vjVVG0kc13fIWeqUViNPyEJxv/OmvnBo0Yme4=

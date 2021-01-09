@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/amersons/emission"
 	"github.com/amersons/nats-protoo/logger"
-	"github.com/chuckpreslar/emission"
-	nats "github.com/nats-io/nats.go"
+	"github.com/nats-io/nats.go"
 )
 
 const (

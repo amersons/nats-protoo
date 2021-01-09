@@ -3,6 +3,7 @@ module github.com/amersons/nats-protoo
 go 1.12
 
 require (
+	github.com/amersons/emission v0.0.0-20210109083015-174e03727dcb
 	github.com/chuckpreslar/emission v0.0.0-20170206194824-a7ddd980baf9
 	github.com/golang/protobuf v1.4.2 // indirect
 	github.com/nats-io/nats-server/v2 v2.1.7 // indirect
