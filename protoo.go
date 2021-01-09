@@ -65,11 +65,7 @@ func NewNatsQueueProtoo(server, queue string) *NatsProtoo {
 }
 
 func (np *NatsProtoo) NewRequestor(channel string) *Requestor {
-	return newRequestor(channel, np, np.nc, false)
-}
-
-func (np *NatsProtoo) NewOnceRequestor(channel string) *Requestor {
-	return newRequestor(channel, np, np.nc, true)
+	return newRequestor(channel, np, np.nc)
 }
 
 func (np *NatsProtoo) OnRequest(channel string, listener RequestFunc) {
