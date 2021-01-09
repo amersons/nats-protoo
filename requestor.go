@@ -28,21 +28,33 @@ type Requestor struct {
 	mutex        *sync.Mutex
 }
 
-func newRequestor(channel string, np *NatsProtoo, nc *nats.Conn) *Requestor {
+func newRequestor(channel string, np *NatsProtoo, nc *nats.Conn, once bool) *Requestor {
 	var req Requestor
 	req.Emitter = *emission.NewEmitter()
 	req.mutex = new(sync.Mutex)
 	req.subj = channel
 	req.np = np
 	req.timeout = DefaultRequestTimeout
-	req.np.On("close", func(code int, err string) {
-		logger.Infof("Transport closed [%d] %s", code, err)
-		req.Emit("close", code, err)
-	})
-	req.np.On("error", func(code int, err string) {
-		logger.Warnf("Transport got error (%d, %s)", code, err)
-		req.Emit("error", code, err)
-	})
+	if once {
+		req.np.Once("close", func(code int, err string) {
+			logger.Infof("Transport closed [%d] %s", code, err)
+			req.Emit("close", code, err)
+		})
+		req.np.Once("error", func(code int, err string) {
+			logger.Warnf("Transport got error (%d, %s)", code, err)
+			req.Emit("error", code, err)
+		})
+	} else {
+		req.np.On("close", func(code int, err string) {
+			logger.Infof("Transport closed [%d] %s", code, err)
+			req.Emit("close", code, err)
+		})
+		req.np.On("error", func(code int, err string) {
+			logger.Warnf("Transport got error (%d, %s)", code, err)
+			req.Emit("error", code, err)
+		})
+	}
+
 	req.nc = nc
 	// Sub reply inbox.
 	random, _ := GenerateRandomString(12)

@@ -65,7 +65,11 @@ func NewNatsQueueProtoo(server, queue string) *NatsProtoo {
 }
 
 func (np *NatsProtoo) NewRequestor(channel string) *Requestor {
-	return newRequestor(channel, np, np.nc)
+	return newRequestor(channel, np, np.nc, false)
+}
+
+func (np *NatsProtoo) NewOnceRequestor(channel string) *Requestor {
+	return newRequestor(channel, np, np.nc, true)
 }
 
 func (np *NatsProtoo) OnRequest(channel string, listener RequestFunc) {
@@ -230,7 +234,7 @@ func setupConnOptions(opts []nats.Option) []nats.Option {
 	opts = append(opts, nats.ReconnectWait(reconnectDelay))
 	opts = append(opts, nats.MaxReconnects(int(totalWait/reconnectDelay)))
 	opts = append(opts, nats.DisconnectErrHandler(func(nc *nats.Conn, err error) {
-		log.Printf("Disconnected due to: %s, will attempt reconnects for %.0fm", err, totalWait.Minutes())
+		log.Printf("Disconnected due to: %s, will attempt reconnects for %.0fMinutes", err, totalWait.Minutes())
 	}))
 	opts = append(opts, nats.ReconnectHandler(func(nc *nats.Conn) {
 		log.Printf("Reconnected [%s]", nc.ConnectedUrl())
