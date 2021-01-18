@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	nprotoo "github.com/amersons/nats-protoo"
 	"github.com/amersons/nats-protoo/logger"
+	"time"
 )
 
 func JsonEncode(str string) map[string]interface{} {
@@ -39,5 +40,6 @@ func main() {
 	bc := npc.NewBroadcaster("even1")
 	bc.Say("hello", JsonEncode(`{"key": "value"}`))
 
-	select {}
+	time.Sleep(5 * time.Second)
+	req.Close()
 }

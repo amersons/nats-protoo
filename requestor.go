@@ -26,6 +26,7 @@ type Requestor struct {
 	timeout      time.Duration
 	transcations map[int]*Transcation
 	mutex        *sync.Mutex
+	back         map[string]interface{}
 }
 
 func newRequestor(channel string, np *NatsProtoo, nc *nats.Conn) *Requestor {
@@ -35,14 +36,19 @@ func newRequestor(channel string, np *NatsProtoo, nc *nats.Conn) *Requestor {
 	req.subj = channel
 	req.np = np
 	req.timeout = DefaultRequestTimeout
-	req.np.On("close", func(code int, err string) {
+	req.back = make(map[string]interface{}, 0)
+	closeBack := func(code int, err string) {
 		logger.Infof("Transport closed [%d] %s", code, err)
 		req.Emit("close", code, err)
-	})
-	req.np.On("error", func(code int, err string) {
+	}
+	req.np.On("close", closeBack)
+	req.back["close"] = closeBack
+	errorBack := func(code int, err string) {
 		logger.Warnf("Transport got error (%d, %s)", code, err)
 		req.Emit("error", code, err)
-	})
+	}
+	req.np.On("error", errorBack)
+	req.back["error"] = errorBack
 	req.nc = nc
 	// Sub reply inbox.
 	random, _ := GenerateRandomString(12)
@@ -55,6 +61,18 @@ func newRequestor(channel string, np *NatsProtoo, nc *nats.Conn) *Requestor {
 	req.nc.Flush()
 	req.transcations = make(map[int]*Transcation)
 	return &req
+}
+
+//Close
+func (req *Requestor) Close() {
+	if len(req.back) == 0 {
+		return
+	}
+	req.np.Off("close", req.back["close"])
+	delete(req.back, "close")
+	req.np.Off("error", req.back["error"])
+	delete(req.back, "error")
+	logger.Debugf("Close---GetListenerCount [%d-%d]", req.np.GetListenerCount("close"), req.np.GetListenerCount("error"))
 }
 
 // SetRequestTimeout .
