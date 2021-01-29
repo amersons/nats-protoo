@@ -19,7 +19,7 @@ func main() {
 	logger.Init("debug")
 	//npc := nprotoo.NewNatsProtoo(nats)
 	npc := nprotoo.NewNatsQueueProtoo(nprotoo.DefaultNatsURL, "4222")
-	npc.OnRequest("channel1", func(request nprotoo.Request, accept nprotoo.RespondFunc, reject nprotoo.RejectFunc) {
+	npc.OnRequest("channel", func(request nprotoo.Request, accept nprotoo.RespondFunc, reject nprotoo.RejectFunc) {
 		method := request.Method
 		data := request.Data
 		logger.Infof("method => %s, data => %v", method, data)

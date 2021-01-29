@@ -3,6 +3,7 @@ package nprotoo
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"sync"
 	"time"
 
@@ -13,7 +14,7 @@ import (
 
 const (
 	// DefaultRequestTimeout .
-	DefaultRequestTimeout = 30 * time.Second
+	DefaultRequestTimeout = 15 * time.Second
 )
 
 // Requestor .
@@ -26,7 +27,6 @@ type Requestor struct {
 	timeout      time.Duration
 	transcations map[int]*Transcation
 	mutex        *sync.Mutex
-	back         map[string]interface{}
 }
 
 func newRequestor(channel string, np *NatsProtoo, nc *nats.Conn) *Requestor {
@@ -36,19 +36,14 @@ func newRequestor(channel string, np *NatsProtoo, nc *nats.Conn) *Requestor {
 	req.subj = channel
 	req.np = np
 	req.timeout = DefaultRequestTimeout
-	req.back = make(map[string]interface{}, 0)
-	closeBack := func(code int, err string) {
+	req.np.On("close", func(code int, err string) {
 		logger.Infof("Transport closed [%d] %s", code, err)
 		req.Emit("close", code, err)
-	}
-	req.np.On("close", closeBack)
-	req.back["close"] = closeBack
-	errorBack := func(code int, err string) {
+	})
+	req.np.On("error", func(code int, err string) {
 		logger.Warnf("Transport got error (%d, %s)", code, err)
 		req.Emit("error", code, err)
-	}
-	req.np.On("error", errorBack)
-	req.back["error"] = errorBack
+	})
 	req.nc = nc
 	// Sub reply inbox.
 	random, _ := GenerateRandomString(12)
@@ -65,13 +60,7 @@ func newRequestor(channel string, np *NatsProtoo, nc *nats.Conn) *Requestor {
 
 //Close
 func (req *Requestor) Close() {
-	if len(req.back) == 0 {
-		return
-	}
-	req.np.Off("close", req.back["close"])
-	delete(req.back, "close")
-	req.np.Off("error", req.back["error"])
-	delete(req.back, "error")
+	req.np.ClearAllListener()
 	logger.Debugf("Close---GetListenerCount [%d-%d]", req.np.GetListenerCount("close"), req.np.GetListenerCount("error"))
 }
 
@@ -122,7 +111,7 @@ func (req *Requestor) Request(method string, data interface{}, success AcceptFun
 		req.transcations[id] = transcation
 		transcation.timer = time.AfterFunc(req.timeout, func() {
 			logger.Debugf("Request timeout transcation[%d]", transcation.id)
-			transcation.reject(480, fmt.Sprintf("Request timeout %fs transcation[%d], method[%s]", req.timeout.Seconds(), transcation.id, method))
+			transcation.reject(http.StatusRequestTimeout, fmt.Sprintf("Request timeout %fs transcation[%d], method[%s]", req.timeout.Seconds(), transcation.id, method))
 			req.mutex.Lock()
 			defer req.mutex.Unlock()
 			delete(req.transcations, id)

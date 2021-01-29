@@ -19,7 +19,7 @@ func main() {
 	logger.Init("debug")
 	npc := nprotoo.NewNatsQueueProtoo(nprotoo.DefaultNatsURL, "debug2")
 	//npc := nprotoo.NewNatsProtoo(/*nprotoo.DefaultNatsURL*/nats)
-	req := npc.NewRequestor("channel1")
+	req := npc.NewRequestor("channel.aaa.test1")
 	req.AsyncRequest("offer", JsonEncode(`{ "sdp": "dummy-sdp1"}`)).Then(
 		func(result nprotoo.RawMessage) {
 			logger.Infof("AsyncRequest.Then: offer success: =>  %s", result)

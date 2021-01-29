@@ -52,7 +52,7 @@ func NewNatsQueueProtoo(server, queue string) *NatsProtoo {
 	np.nc = nc
 	np.nc.SetClosedHandler(func(nc *nats.Conn) {
 		logger.Warnf("%s [%v]", "nats nc closed", nc.LastError)
-		np.Emit("close", 0, nc.LastError().Error)
+		np.Emit("close", 0, nc.LastError())
 		np.closed = true
 	})
 	np.queue = queue
@@ -177,11 +177,12 @@ func (np *NatsProtoo) Close() {
 	np.mutex.Lock()
 	defer np.mutex.Unlock()
 	if np.closed == false {
-		logger.Infof("Close nats nc now : ", np)
+		logger.Infof("Close nats nc now : %v", np)
+		_ = np.nc.Drain()
 		np.nc.Close()
 		np.closed = true
 	} else {
-		logger.Warnf("Transport already closed :", np)
+		logger.Warnf("Transport already closed :  %v", np)
 	}
 }
 
@@ -224,13 +225,15 @@ func (np *NatsProtoo) Reply(message []byte, reply string) error {
 }
 
 func setupConnOptions(opts []nats.Option) []nats.Option {
-	totalWait := 10 * time.Minute
+	totalWait := time.Minute
 	reconnectDelay := time.Second
 
 	opts = append(opts, nats.ReconnectWait(reconnectDelay))
 	opts = append(opts, nats.MaxReconnects(int(totalWait/reconnectDelay)))
 	opts = append(opts, nats.DisconnectErrHandler(func(nc *nats.Conn, err error) {
-		log.Printf("Disconnected due to: %s, will attempt reconnects for %.0fMinutes", err, totalWait.Minutes())
+		if err != nil {
+			log.Printf("Disconnected due to: %s, will attempt reconnects for %.0fMinutes", err, totalWait.Minutes())
+		}
 	}))
 	opts = append(opts, nats.ReconnectHandler(func(nc *nats.Conn) {
 		log.Printf("Reconnected [%s]", nc.ConnectedUrl())
